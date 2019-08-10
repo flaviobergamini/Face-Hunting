@@ -1,5 +1,5 @@
-var canvas, ctx, ALTURA, LARGURA, event, velocidade=6, pontuacao = 0
-
+var canvas, ctx, ALTURA, LARGURA, event, velocidade = 6, pontuacao = 0, set = 0, record,
+estadoAtual = 0, // 0 jogar - 1 Jogando 2 - perdeu
 fundo = {
     y: 0,
     altura: 630,
@@ -44,8 +44,17 @@ bloco = {
 
         if(this.x > 450)
             this.x = 450;
-        
-    }
+    },
+
+    reset: function () {
+        this.velocidade = 0;
+        this.y = 0;
+        if (this.score > record) {
+            localStorage.setItem("record", this.score);
+            record = this.score;
+        }
+        this.score = 0;
+    },
 },
 
 obstaculos = {
@@ -62,27 +71,35 @@ obstaculos = {
             altura: 50,
             gravidade: 1.5,
             velocidade: 0,
-            cor: this.cores[Math.floor(3 * Math.random())]
+            cor: this.cores[Math.floor(3 * Math.random())],
         })
 
         this.tempoInsere = 30 + Math.floor(51 * Math.random());
     },
 
     atualiza: function () {
+
         if (this.tempoInsere == 0)
             this.insere();
         else
             this.tempoInsere--;
         for (var i = 0, tam = this._obs.length; i < tam; i++) {
             var obs = this._obs[i];
+            
             obs.y += obs.gravidade;
-
+                    
             if (bloco.x == obs.x && obs.y+50 >= bloco.y){
-                bloco.score++;
+                if(obs.cor == "yellow"){
+                    bloco.score--;
+                    console.log("amarelo");
+                    estadoAtual = 2;               
+                }else{
+                    bloco.score++;
+                    console.log("pontuou");
+                }
                 this._obs.splice(i, 1);
                 tam--;
                 i--;
-                console.log("pontuou");
             }
             else if (obs.y == 630) {
                 console.log("entrou");
@@ -102,6 +119,7 @@ obstaculos = {
         for (var i = 0, tam = this._obs.length; i < tam; i++) {
             var obs = this._obs[i];
             ctx.fillStyle = obs.cor;
+            // ctx.drawImage(imgN, obs.x, obs.y);
             ctx.fillRect(obs.x, obs.y, obs.largura, obs.altura);
         }
     }
@@ -109,12 +127,33 @@ obstaculos = {
 
 
 function move(){
-    document.body.onkeyup = function (e) {
-        if (e.keyCode == 37) {
-            bloco.atualizaLado(0);
+    if(estadoAtual == 1){
+        document.body.onkeyup = function (e) {
+            if (e.keyCode == 37) {
+                bloco.atualizaLado(0);
+            }
+            else if (e.keyCode == 39) {
+                bloco.atualizaLado(1);
+            }
         }
-        else if (e.keyCode == 39) {
-            bloco.atualizaLado(1);
+    } else if(estadoAtual == 0){
+        document.body.onkeyup = function (e) {
+            if (e.keyCode == 32) {
+                estadoAtual = 1;
+                move();
+            }
+        }
+    } else {
+        obstaculos.limpa();  
+    } 
+}
+
+function inicia() {
+    document.body.onkeyup = function (e) {
+        if (e.keyCode == 32) {
+            estadoAtual = 1;
+            obstaculos.limpa();
+            move();
         }
     }
 }
@@ -134,6 +173,11 @@ function init() {
     canvas.height = ALTURA;
     canvas.style.border = "1px solid #000";
     ctx = canvas.getContext("2d");
+
+    record = localStorage.getItem("record");
+
+    if (record == null)
+        record = 0;
     
     move();
     roda();
@@ -141,7 +185,9 @@ function init() {
 }
 
 function atualiza() {
-    obstaculos.atualiza();
+    if(estadoAtual == 1)
+        obstaculos.atualiza();
+
 }
 
 function roda(){
@@ -159,9 +205,31 @@ function desenho(){
     bloco.desenha();
     obstaculos.desenha();
 
+    // var imgN = document.getElementById("imagemP");
+    // ctx.drawImage(imgN, 0, 0);
+
     ctx.fillStyle = "#fff";
     ctx.font = "50px Arial";
     ctx.fillText(bloco.score, 30, 50);
+
+    if(estadoAtual == 2){
+        ctx.fillStyle = "red";
+        ctx.font = "50px Arial";
+        ctx.fillText("Game Over", 125, 315);
+
+        if (bloco.score > record)
+            ctx.fillText("Novo Record!", 125, 225);
+        /* SCORE */
+        if (bloco.score < 10)
+            ctx.fillText(bloco.score, 250, 380);
+
+        inicia();
+    }
+    ctx.restore();
+
+
+    
+
 }
 
 init();
