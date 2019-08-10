@@ -25,7 +25,8 @@ bloco = {
     largura: 50,
     altura: 50,
     cor: "red",
-    velocidade: 30,
+    velocidade: 50,
+    score: 0,
 
     desenha: function(){
         ctx.fillStyle = this.cor;
@@ -33,10 +34,11 @@ bloco = {
     },
 
     atualizaLado: function(lado) {
-        if(lado == 1 )
+        if(lado == 1 ){
             this.x += this.velocidade;
-        else 
+        }else {
             this.x -= this.velocidade;
+        }
         if(this.x < 0)
             this.x = 0;
 
@@ -50,19 +52,20 @@ obstaculos = {
     _obs: [],
     cores: ["yellow", "pink", "green"],
     tempoInsere: 0,
+    pos: [0, 50, 100, 150, 200, 250, 300, 350, 400, 450],
 
     insere: function () {
         this._obs.push({
-            x: Math.floor(500 * Math.random()),
+            x: this.pos[Math.floor(10*Math.random())],
             y: 0,
             largura: 50,
             altura: 50,
             gravidade: 1.5,
             velocidade: 0,
-            cor: this.cores[Math.floor(4 * Math.random())]
+            cor: this.cores[Math.floor(3 * Math.random())]
         })
 
-        this.tempoInsere = 35 + Math.floor(21 * Math.random());
+        this.tempoInsere = 30 + Math.floor(51 * Math.random());
     },
 
     atualiza: function () {
@@ -74,8 +77,8 @@ obstaculos = {
             var obs = this._obs[i];
             obs.y += obs.gravidade;
 
-            if((obs.x + 50) == bloco.x && (obs.y + 60) == bloco.y ){
-                pontuacao++;
+            if (bloco.x == obs.x && obs.y+50 >= bloco.y){
+                bloco.score++;
                 this._obs.splice(i, 1);
                 tam--;
                 i--;
@@ -103,6 +106,7 @@ obstaculos = {
         }
     }
 };
+
 
 function move(){
     document.body.onkeyup = function (e) {
@@ -141,17 +145,23 @@ function atualiza() {
 }
 
 function roda(){
-    
     atualiza();
     desenho();
     window.webkitRequestAnimationFrame(roda);
 }
 
 function desenho(){
-    canvas.width = canvas.width;
+
+    // canvas.width = canvas.width;
+
     fundo.desenha();
+    
     bloco.desenha();
     obstaculos.desenha();
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "50px Arial";
+    ctx.fillText(bloco.score, 30, 50);
 }
 
 init();
