@@ -1,4 +1,4 @@
-var canvas, ctx, ALTURA, LARGURA, event,
+var canvas, ctx, ALTURA, LARGURA, event, velocidade=6, pontuacao = 0
 
 fundo = {
     y: 0,
@@ -25,7 +25,7 @@ bloco = {
     largura: 50,
     altura: 50,
     cor: "red",
-    velocidade: 50,
+    velocidade: 30,
 
     desenha: function(){
         ctx.fillStyle = this.cor;
@@ -44,6 +44,64 @@ bloco = {
             this.x = 450;
         
     }
+},
+
+obstaculos = {
+    _obs: [],
+    cores: ["yellow", "pink", "green"],
+    tempoInsere: 0,
+
+    insere: function () {
+        this._obs.push({
+            x: Math.floor(500 * Math.random()),
+            y: 0,
+            largura: 50,
+            altura: 50,
+            gravidade: 1.5,
+            velocidade: 0,
+            cor: this.cores[Math.floor(4 * Math.random())]
+        })
+
+        this.tempoInsere = 35 + Math.floor(21 * Math.random());
+    },
+
+    atualiza: function () {
+        if (this.tempoInsere == 0)
+            this.insere();
+        else
+            this.tempoInsere--;
+        for (var i = 0, tam = this._obs.length; i < tam; i++) {
+            var obs = this._obs[i];
+            obs.y += obs.gravidade;
+
+            if((obs.x + 50) == bloco.x && (obs.y + 60) == bloco.y ){
+                pontuacao++;
+                this._obs.splice(i, 1);
+                tam--;
+                i--;
+                console.log("pontuou");
+            }
+            else if (obs.y == 630) {
+                console.log("entrou");
+                this._obs.splice(i, 1);
+                tam--;
+                i--;
+            }
+
+        }
+    },
+
+    limpa: function () {
+        this._obs = [];
+    },
+
+    desenha: function () {
+        for (var i = 0, tam = this._obs.length; i < tam; i++) {
+            var obs = this._obs[i];
+            ctx.fillStyle = obs.cor;
+            ctx.fillRect(obs.x, obs.y, obs.largura, obs.altura);
+        }
+    }
 };
 
 function move(){
@@ -60,6 +118,7 @@ function move(){
 function init() {
     ALTURA = window.innerHeight;
     LARGURA = window.innerWidth;
+    console.log(ALTURA);
 
     canvas = document.getElementById("mygame");
     if (LARGURA > 500) {
@@ -77,6 +136,10 @@ function init() {
     
 }
 
+function atualiza() {
+    obstaculos.atualiza();
+}
+
 function roda(){
     
     atualiza();
@@ -84,14 +147,11 @@ function roda(){
     window.webkitRequestAnimationFrame(roda);
 }
 
-function atualiza() {
-}
-
 function desenho(){
-    // canvas.width = canvas.width;
+    canvas.width = canvas.width;
     fundo.desenha();
     bloco.desenha();
-    
+    obstaculos.desenha();
 }
 
 init();
